@@ -380,6 +380,10 @@
             <div class="report-grid-item"><span class="label">Profit Factor</span><span id="report-pf" class="value"></span></div>
             <div class="report-grid-item"><span class="label">System Edge (EV)</span><span id="report-ev" class="value"></span></div>
         </div>
+        <div id="report-sequence-container" class="report-grid-item" style="grid-column: 1 / -1; margin-top: 15px;">
+            <span class="label">Trade Sequence</span>
+            <span id="report-sequence" class="value"></span>
+        </div>
     </div>
 
     <script>
@@ -602,6 +606,7 @@
                 document.getElementById('report-winrate').textContent = totalWrEl.textContent;
                 document.getElementById('report-pf').textContent = profitFactorEl.textContent;
                 document.getElementById('report-ev').textContent = evValueEl.textContent;
+                document.getElementById('report-sequence').textContent = sequenceEl.textContent;
 
                 // 2. Create Report Chart
                 if (reportChart) reportChart.destroy();
@@ -619,27 +624,29 @@
 
                 reportContainer.style.display = 'block'; // Show off-screen container
 
-                html2canvas(reportContainer, { logging: false }).then(canvas => {
-                    reportContainer.style.display = 'none'; // Hide it again
-                    reportChart.destroy(); // Clean up the temporary chart
+                setTimeout(() => {
+                    html2canvas(reportContainer, { logging: false }).then(canvas => {
+                        reportContainer.style.display = 'none'; // Hide it again
+                        reportChart.destroy(); // Clean up the temporary chart
 
-                    canvas.toBlob(blob => {
-                        navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-                            .then(() => {
-                                screenshotBtn.innerHTML = 'Copied!';
-                                setTimeout(() => {
+                        canvas.toBlob(blob => {
+                            navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+                                .then(() => {
+                                    screenshotBtn.innerHTML = 'Copied!';
+                                    setTimeout(() => {
+                                        screenshotBtn.innerHTML = originalHTML;
+                                        screenshotBtn.disabled = false;
+                                    }, 2000);
+                                })
+                                .catch(err => {
+                                    console.error('Could not copy image: ', err);
+                                    alert('Failed to copy screenshot.');
                                     screenshotBtn.innerHTML = originalHTML;
                                     screenshotBtn.disabled = false;
-                                }, 2000);
-                            })
-                            .catch(err => {
-                                console.error('Could not copy image: ', err);
-                                alert('Failed to copy screenshot.');
-                                screenshotBtn.innerHTML = originalHTML;
-                                screenshotBtn.disabled = false;
-                            });
+                                });
+                        });
                     });
-                });
+                }, 100);
             };
 
             winBtn.addEventListener('click', () => handleTrade('win'));
