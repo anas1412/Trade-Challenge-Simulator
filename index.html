@@ -6,6 +6,8 @@
     <title>Trade Challenge Simulator</title>
     <!-- Include Chart.js library from a CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Include html2canvas library from a CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -54,9 +56,11 @@
 
         header {
             grid-area: header;
-            text-align: center;
             border-bottom: 1px solid var(--accent-color);
             padding-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         header h1 { font-family: 'Roboto Mono', monospace; font-size: 2rem; }
 
@@ -132,9 +136,21 @@
         .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
         .btn:active:not(:disabled) { transform: translateY(0); border-bottom-width: 1px; }
         .btn:disabled { background-color: var(--disabled-color); color: var(--secondary-text); cursor: not-allowed; border-bottom: 3px solid var(--accent-color); }
+        
         #win-btn { background-color: var(--win-color); }
         #loss-btn { background-color: var(--loss-color); }
         #reset-btn { background-color: var(--secondary-text); color: var(--bg-color); grid-column: 1 / -1;}
+        
+        #screenshot-btn {
+            background-color: var(--secondary-text);
+            color: var(--bg-color);
+            font-size: 0.8rem;
+            padding: 8px 12px;
+            border-bottom-width: 2px;
+        }
+        #screenshot-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
 
         /* Responsive Layout */
         @media (max-width: 900px) {
@@ -172,7 +188,10 @@
 <body>
 
     <div class="simulator-container">
-        <header><h1>Trade Challenge Simulator</h1></header>
+        <header>
+            <h1>Trade Challenge Simulator</h1>
+            <button id="screenshot-btn" class="btn">Copy Screenshot</button>
+        </header>
 
         <div class="controls-column">
             <div class="section">
@@ -254,6 +273,8 @@
             const evValueEl = document.getElementById('ev-value');
             const profitFactorEl = document.getElementById('profit-factor-value');
             const chartCanvas = document.getElementById('performanceChart');
+            const screenshotBtn = document.getElementById('screenshot-btn');
+            const simulatorContainer = document.querySelector('.simulator-container');
 
             const calculatePassProbabilities = (winRate, winAmount, lossAmount, passTarget, failTarget) => {
                 const memoKey = `${winRate}-${winAmount}-${lossAmount}-${passTarget}-${failTarget}`;
@@ -437,6 +458,31 @@
             lossBtn.addEventListener('click', () => handleTrade('loss'));
             resetBtn.addEventListener('click', resetSimulator);
             
+            screenshotBtn.addEventListener('click', () => {
+                screenshotBtn.style.display = 'none';
+                html2canvas(simulatorContainer).then(canvas => {
+                    screenshotBtn.style.display = 'block';
+                    canvas.toBlob(blob => {
+                        navigator.clipboard.write([
+                            new ClipboardItem({
+                                'image/png': blob
+                            })
+                        ]).then(() => {
+                            const originalText = screenshotBtn.textContent;
+                            screenshotBtn.textContent = 'Copied!';
+                            screenshotBtn.disabled = true;
+                            setTimeout(() => {
+                                screenshotBtn.textContent = originalText;
+                                screenshotBtn.disabled = false;
+                            }, 2000);
+                        }).catch(err => {
+                            console.error('Could not copy image: ', err);
+                            alert('Failed to copy screenshot.');
+                        });
+                    });
+                });
+            });
+
             [passTargetInput, failTargetInput, riskInput, rrInput, winRateInput].forEach(input => {
                 input.addEventListener('change', resetSimulator);
             });
