@@ -220,8 +220,8 @@
             font-size: 3rem;
             font-weight: 700;
         }
-        #report-status.status-pass { color: var(--win-color); }
-        #report-status.status-fail { color: var(--loss-color); }
+        #report-status.status-pass { background-color: var(--win-color); color: white; padding: 5px 15px; border-radius: 20px; display: inline-block; font-size: 1.5rem; }
+        #report-status.status-fail { background-color: var(--loss-color); color: white; padding: 5px 15px; border-radius: 20px; display: inline-block; font-size: 1.5rem; }
         .report-chart-container {
             height: 350px;
             margin-bottom: 20px;
@@ -533,14 +533,12 @@
             const checkStatus = () => {
                 if (state.cumulative >= state.passTarget) {
                     state.cumulative = state.passTarget;
-                    statusEl.textContent = 'PASS';
                     state.isStopped = true;
                 } else if (state.cumulative <= state.failTarget) {
                     state.cumulative = state.failTarget;
-                    statusEl.textContent = 'FAIL';
                     state.isStopped = true;
                 } else {
-                    statusEl.textContent = 'CONTINUE';
+                    state.isStopped = false;
                 }
             };
             
@@ -563,11 +561,21 @@
 
                 statusEl.className = 'status-display';
                 if (state.isStopped) {
-                    statusEl.classList.add(state.cumulative >= state.passTarget ? 'status-pass' : 'status-fail');
+                    if (state.cumulative >= state.passTarget) {
+                        statusEl.classList.add('status-pass');
+                        statusEl.textContent = 'PASS';
+                    } else {
+                        statusEl.classList.add('status-fail');
+                        statusEl.textContent = 'FAIL';
+                    }
                 } else {
                     statusEl.classList.add('status-continue');
+                    if (state.tradeCount > 0) {
+                        statusEl.textContent = 'CONTINUE';
+                    } else {
+                        statusEl.textContent = 'START';
+                    }
                 }
-                if (state.tradeCount === 0) statusEl.textContent = 'START';
                 
                 const winRate = parseFloat(winRateInput.value) / 100;
                 const ev = (winRate * state.winAmount) + ((1 - winRate) * state.lossAmount);
@@ -596,7 +604,15 @@
                 const statusText = statusEl.textContent;
                 const statusElReport = document.getElementById('report-status');
                 statusElReport.textContent = statusText;
-                statusElReport.className = 'report-value ' + statusEl.className.replace('status-display', '');
+                
+                statusElReport.className = 'report-value';
+                if (state.isStopped) {
+                    if (state.cumulative >= state.passTarget) {
+                        statusElReport.classList.add('status-pass');
+                    } else {
+                        statusElReport.classList.add('status-fail');
+                    }
+                }
 
                 document.getElementById('report-pass-target').textContent = passTargetInput.value + '%';
                 document.getElementById('report-fail-target').textContent = failTargetInput.value + '%';
