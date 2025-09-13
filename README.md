@@ -11,11 +11,6 @@ This tool goes beyond simple win/loss tracking. It leverages a probabilistic mod
 
 ---
 
-![Simulator Screenshot](https://i.imgur.com/your-screenshot.png)
-*(Suggestion: Replace the link above with a real screenshot of your application)*
-
----
-
 ## About The Project
 
 Most trading simulators show you a hypothetical equity curve. This one does more. It was built to answer a more critical question: "**Given my current strategy, what are the actual mathematical odds of me passing this challenge?**"
