@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenge Passing Simulator</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --container-bg: #16213e;
+            --primary-text: #e0fbfc;
+            --secondary-text: #9fb3c8;
+            --accent-color: #0f3460;
+            --win-color: #2ecc71;
+            --loss-color: #e74c3c;
+            --disabled-color: #536f8d;
+            --border-color: #536f8d;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Lato:wght@400;700&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .simulator-container {
+            background-color: var(--container-bg);
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        header { text-align: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 20px; }
+        header h1 { font-family: 'Roboto Mono', monospace; font-size: 2rem; }
+        
+        .section { background-color: var(--accent-color); padding: 15px; border-radius: 8px; }
+        .section-title {
+            font-weight: 700; color: var(--secondary-text); margin-bottom: 15px;
+            font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; align-items: center; }
+        .config-item { display: flex; flex-direction: column; gap: 5px; }
+        .config-item label { font-weight: 700; font-size: 0.9rem; }
+        .config-item input {
+            width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color);
+            background-color: var(--bg-color); color: var(--primary-text); font-size: 1.1rem;
+            text-align: center; font-family: 'Roboto Mono', monospace;
+        }
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .display-area { text-align: center; }
+        .cumulative-display { font-family: 'Roboto Mono', monospace; font-size: 4rem; font-weight: 700; margin-bottom: 10px; }
+        .status-display { font-size: 1.5rem; font-weight: 700; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 20px; }
+        .status-continue { background-color: var(--secondary-text); color: var(--bg-color); }
+        .status-pass { background-color: var(--win-color); color: white; }
+        .status-fail { background-color: var(--loss-color); color: white; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; text-align: left; }
+        .stat-item { background-color: var(--container-bg); padding: 12px; border-radius: 8px; }
+        .stat-item .label { color: var(--secondary-text); display: block; margin-bottom: 5px; font-size: 0.8rem; }
+        .stat-item .value { font-family: 'Roboto Mono', monospace; font-weight: 700; font-size: 1.2rem; word-wrap: break-word; }
+
+        #pass-prob-value { color: var(--win-color); }
+        #fail-prob-value { color: var(--loss-color); }
+        #ev-value.positive { color: var(--win-color); }
+        #ev-value.negative { color: var(--loss-color); }
+        
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .btn {
+            padding: 12px; border: none; border-radius: 8px; font-size: 1rem;
+            font-weight: 700; cursor: pointer; transition: all 0.2s ease;
+            color: white; border-bottom: 3px solid rgba(0,0,0,0.3);
+        }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn:active:not(:disabled) { transform: translateY(0); border-bottom-width: 1px; }
+        .btn:disabled { background-color: var(--disabled-color); color: var(--secondary-text); cursor: not-allowed; border-bottom: 3px solid var(--accent-color); }
+        #win-btn { background-color: var(--win-color); }
+        #loss-btn { background-color: var(--loss-color); }
+        #reset-btn { background-color: var(--secondary-text); color: var(--bg-color); grid-column: 1 / -1;}
+    </style>
+</head>
+<body>
+
+    <div class="simulator-container">
+        <header><h1>Challenge Passing Simulator</h1></header>
+
+        <div class="section">
+            <div class="section-title">Challenge Configuration</div>
+            <div class="config-grid">
+                <div class="config-item">
+                    <label for="pass-target">Pass Target %</label>
+                    <input type="number" id="pass-target" value="6" min="1" step="1">
+                </div>
+                <div class="config-item">
+                    <label for="fail-target">Fail Target %</label>
+                    <input type="number" id="fail-target" value="-6" max="-1" step="1">
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Your Strategy Configuration</div>
+            <div class="config-grid">
+                <div class="config-item">
+                    <label for="risk-percent">Risk %</label>
+                    <input type="number" id="risk-percent" value="2" min="0.1" step="0.1">
+                </div>
+                <div class="config-item">
+                    <label for="rr-ratio">RR Ratio</label>
+                    <input type="number" id="rr-ratio" value="1.5" min="0.1" step="0.1">
+                </div>
+                 <div class="config-item">
+                    <label for="win-rate">Win Rate %</label>
+                    <input type="number" id="win-rate" value="60" min="0" max="100">
+                </div>
+            </div>
+        </div>
+
+        <div class="display-area">
+            <div id="cumulative-value" class="cumulative-display">0.00%</div>
+            <div id="status-value" class="status-display status-continue">START</div>
+        </div>
+        
+        <div class="section">
+             <div class="section-title">System & Historical State</div>
+             <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="label">System Edge (EV)</span>
+                    <span id="ev-value" class="value positive">+1.00%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Trade #</span>
+                    <span id="trade-count-value" class="value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Actual WR%</span>
+                    <span id="total-wr-value" class="value">N/A</span>
+                </div>
+                <div class="stat-item" style="grid-column: 1 / -1;">
+                    <span class="label">Sequence</span>
+                    <span id="sequence-value" class="value">None</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Probability from this Point</div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="label">Prob. of PASS</span>
+                    <span id="pass-prob-value" class="value">75.14%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Prob. of FAIL</span>
+                    <span id="fail-prob-value" class="value">24.86%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button id="win-btn" class="btn">Win</button>
+            <button id="loss-btn" class="btn">Loss</button>
+            <button id="reset-btn" class="btn">Reset Simulation</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let state = {};
+            const memoizedProbs = new Map();
+
+            const passTargetInput = document.getElementById('pass-target');
+            const failTargetInput = document.getElementById('fail-target');
+            const riskInput = document.getElementById('risk-percent');
+            const rrInput = document.getElementById('rr-ratio');
+            const winRateInput = document.getElementById('win-rate');
+            const cumulativeEl = document.getElementById('cumulative-value');
+            const statusEl = document.getElementById('status-value');
+            const tradeCountEl = document.getElementById('trade-count-value');
+            const totalWrEl = document.getElementById('total-wr-value');
+            const sequenceEl = document.getElementById('sequence-value');
+            const winBtn = document.getElementById('win-btn');
+            const lossBtn = document.getElementById('loss-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const passProbEl = document.getElementById('pass-prob-value');
+            const failProbEl = document.getElementById('fail-prob-value');
+            const evValueEl = document.getElementById('ev-value');
+
+            const calculatePassProbabilities = (winRate, winAmount, lossAmount, passTarget, failTarget) => {
+                const memoKey = `${winRate}-${winAmount}-${lossAmount}-${passTarget}-${failTarget}`;
+                if (memoizedProbs.has(memoKey)) {
+                    return memoizedProbs.get(memoKey);
+                }
+
+                const statesToSolve = new Set();
+                const queue = [0];
+                const visited = new Set([0]);
+                while (queue.length > 0) {
+                    const current = queue.shift();
+                    statesToSolve.add(current);
+                    const nextStates = [current + winAmount, current + lossAmount];
+                    for (const next of nextStates) {
+                        if (!visited.has(next) && next < passTarget && next > failTarget) {
+                            visited.add(next);
+                            queue.push(next);
+                        }
+                    }
+                }
+                
+                const p = winRate, q = 1 - p;
+                let probs = new Map();
+                statesToSolve.forEach(s => probs.set(s, p));
+                for (let i = 0; i < 100; i++) {
+                    const newProbs = new Map(probs);
+                    for (const s of statesToSolve) {
+                        const winState = s + winAmount, lossState = s + lossAmount;
+                        const pWin = (winState >= passTarget) ? 1.0 : (probs.get(winState) || 0);
+                        const pLoss = (lossState <= failTarget) ? 0.0 : (probs.get(lossState) || 0);
+                        newProbs.set(s, p * pWin + q * pLoss);
+                    }
+                    probs = newProbs;
+                }
+                memoizedProbs.set(memoKey, probs);
+                return probs;
+            };
+
+            const resetSimulator = () => {
+                const passTarget = parseFloat(passTargetInput.value);
+                const failTarget = parseFloat(failTargetInput.value);
+                const risk = parseFloat(riskInput.value);
+                const rr = parseFloat(rrInput.value);
+                const winRate = parseFloat(winRateInput.value) / 100;
+
+                const lossAmount = -risk;
+                const winAmount = risk * rr;
+                
+                state = {
+                    cumulative: 0, tradeCount: 0, wins: 0, sequence: [], isStopped: false,
+                    winAmount, lossAmount, passTarget, failTarget,
+                    passProbabilities: calculatePassProbabilities(winRate, winAmount, lossAmount, passTarget, failTarget)
+                };
+                updateUI();
+            };
+            
+            const handleTrade = (outcome) => {
+                if (state.isStopped) return;
+                state.tradeCount++;
+                if (outcome === 'win') {
+                    state.cumulative += state.winAmount;
+                    state.sequence.push('W');
+                    state.wins++;
+                } else {
+                    state.cumulative += state.lossAmount;
+                    state.sequence.push('L');
+                }
+                checkStatus();
+                updateUI();
+            };
+
+            const checkStatus = () => {
+                if (state.cumulative >= state.passTarget) {
+                    state.cumulative = state.passTarget;
+                    statusEl.textContent = 'PASS';
+                    state.isStopped = true;
+                } else if (state.cumulative <= state.failTarget) {
+                    state.cumulative = state.failTarget;
+                    statusEl.textContent = 'FAIL';
+                    state.isStopped = true;
+                } else {
+                    statusEl.textContent = 'CONTINUE';
+                }
+            };
+            
+            const updateUI = () => {
+                cumulativeEl.textContent = `${state.cumulative.toFixed(2)}%`;
+                tradeCountEl.textContent = state.tradeCount;
+                sequenceEl.textContent = state.sequence.length > 0 ? state.sequence.join(' → ') : 'None';
+                totalWrEl.textContent = state.tradeCount > 0 ? `${((state.wins / state.tradeCount) * 100).toFixed(2)}%` : 'N/A';
+
+                statusEl.className = 'status-display';
+                if (state.isStopped) {
+                    statusEl.classList.add(state.cumulative >= state.passTarget ? 'status-pass' : 'status-fail');
+                } else {
+                    statusEl.classList.add('status-continue');
+                }
+                if (state.tradeCount === 0) statusEl.textContent = 'START';
+                
+                const winRate = parseFloat(winRateInput.value) / 100;
+                const ev = (winRate * state.winAmount) + ((1 - winRate) * state.lossAmount);
+                evValueEl.textContent = `${ev.toFixed(2)}%`;
+                evValueEl.className = 'value';
+                if (ev > 0) evValueEl.classList.add('positive'), evValueEl.textContent = `+${ev.toFixed(2)}%`;
+                else if (ev < 0) evValueEl.classList.add('negative');
+                
+                let passProb = 0;
+                if (state.cumulative >= state.passTarget) passProb = 1.0;
+                else if (state.cumulative <= state.failTarget) passProb = 0.0;
+                else passProb = state.passProbabilities.get(state.cumulative) || 0;
+                
+                passProbEl.textContent = `${(passProb * 100).toFixed(2)}%`;
+                failProbEl.textContent = `${((1 - passProb) * 100).toFixed(2)}%`;
+
+                winBtn.textContent = `Win (+${state.winAmount.toFixed(2)}%)`;
+                lossBtn.textContent = `Loss (${state.lossAmount.toFixed(2)}%)`;
+                winBtn.disabled = state.isStopped;
+                lossBtn.disabled = state.isStopped;
+            };
+
+            winBtn.addEventListener('click', () => handleTrade('win'));
+            lossBtn.addEventListener('click', () => handleTrade('loss'));
+            resetBtn.addEventListener('click', resetSimulator);
+            
+            [passTargetInput, failTargetInput, riskInput, rrInput, winRateInput].forEach(input => {
+                input.addEventListener('change', resetSimulator);
+            });
+
+            resetSimulator();
+        });
+    </script>
+</body>
+</html>
