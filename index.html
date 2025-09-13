@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Challenge Passing Simulator</title>
+    <title>Trade Challenge Simulator</title>
+    <!-- Include Chart.js library from a CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-color: #1a1a2e;
             --container-bg: #16213e;
             --primary-text: #e0fbfc;
-            --secondary-text: #9fb3c8;
+            --secondary-text: #a9c1d9; 
             --accent-color: #0f3460;
             --win-color: #2ecc71;
             --loss-color: #e74c3c;
             --disabled-color: #536f8d;
             --border-color: #536f8d;
+            --chart-line-color: #3498db;
         }
 
         @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Lato:wght@400;700&display=swap');
@@ -37,12 +40,12 @@
             border-radius: 12px;
             padding: 30px;
             width: 100%;
-            max-width: 650px;
+            max-width: 700px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 20px;
         }
 
         header { text-align: center; border-bottom: 1px solid var(--accent-color); padding-bottom: 20px; }
@@ -61,16 +64,32 @@
             width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color);
             background-color: var(--bg-color); color: var(--primary-text); font-size: 1.1rem;
             text-align: center; font-family: 'Roboto Mono', monospace;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .config-item input:focus {
+            outline: none;
+            border-color: var(--chart-line-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
         }
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
         .display-area { text-align: center; }
         .cumulative-display { font-family: 'Roboto Mono', monospace; font-size: 4rem; font-weight: 700; margin-bottom: 10px; }
-        .status-display { font-size: 1.5rem; font-weight: 700; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 20px; }
+        .status-display { font-size: 1.5rem; font-weight: 700; padding: 5px 15px; border-radius: 20px; display: inline-block; }
         .status-continue { background-color: var(--secondary-text); color: var(--bg-color); }
         .status-pass { background-color: var(--win-color); color: white; }
         .status-fail { background-color: var(--loss-color); color: white; }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+            /* --- VISIBILITY FIX: Reverted to a subtle, non-distracting background --- */
+            background-color: var(--container-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
 
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; text-align: left; }
         .stat-item { background-color: var(--container-bg); padding: 12px; border-radius: 8px; }
@@ -99,37 +118,22 @@
 <body>
 
     <div class="simulator-container">
-        <header><h1>Challenge Passing Simulator</h1></header>
+        <header><h1>Trade Challenge Simulator</h1></header>
 
         <div class="section">
             <div class="section-title">Challenge Configuration</div>
             <div class="config-grid">
-                <div class="config-item">
-                    <label for="pass-target">Pass Target %</label>
-                    <input type="number" id="pass-target" value="6" min="1" step="1">
-                </div>
-                <div class="config-item">
-                    <label for="fail-target">Fail Target %</label>
-                    <input type="number" id="fail-target" value="-6" max="-1" step="1">
-                </div>
+                <div class="config-item"><label for="pass-target">Pass Target %</label><input type="number" id="pass-target" value="6" min="1" step="1"></div>
+                <div class="config-item"><label for="fail-target">Fail Target %</label><input type="number" id="fail-target" value="-6" max="-1" step="1"></div>
             </div>
         </div>
         
         <div class="section">
             <div class="section-title">Your Strategy Configuration</div>
             <div class="config-grid">
-                <div class="config-item">
-                    <label for="risk-percent">Risk %</label>
-                    <input type="number" id="risk-percent" value="2" min="0.1" step="0.1">
-                </div>
-                <div class="config-item">
-                    <label for="rr-ratio">RR Ratio</label>
-                    <input type="number" id="rr-ratio" value="1.5" min="0.1" step="0.1">
-                </div>
-                 <div class="config-item">
-                    <label for="win-rate">Win Rate %</label>
-                    <input type="number" id="win-rate" value="60" min="0" max="100">
-                </div>
+                <div class="config-item"><label for="risk-percent">Risk %</label><input type="number" id="risk-percent" value="2" min="0.1" step="0.1"></div>
+                <div class="config-item"><label for="rr-ratio">RR Ratio</label><input type="number" id="rr-ratio" value="1.5" min="0.1" step="0.1"></div>
+                <div class="config-item"><label for="win-rate">Win Rate %</label><input type="number" id="win-rate" value="60" min="0" max="100"></div>
             </div>
         </div>
 
@@ -139,38 +143,27 @@
         </div>
         
         <div class="section">
+            <div class="section-title">Performance Chart</div>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="section">
              <div class="section-title">System & Historical State</div>
              <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="label">System Edge (EV)</span>
-                    <span id="ev-value" class="value positive">+1.00%</span>
-                </div>
-                <div class="stat-item">
-                    <span class="label">Trade #</span>
-                    <span id="trade-count-value" class="value">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="label">Actual WR%</span>
-                    <span id="total-wr-value" class="value">N/A</span>
-                </div>
-                <div class="stat-item" style="grid-column: 1 / -1;">
-                    <span class="label">Sequence</span>
-                    <span id="sequence-value" class="value">None</span>
-                </div>
+                <div class="stat-item"><span class="label">System Edge (EV)</span><span id="ev-value" class="value positive">+1.00%</span></div>
+                <div class="stat-item"><span class="label">Trade #</span><span id="trade-count-value" class="value">0</span></div>
+                <div class="stat-item"><span class="label">Actual WR%</span><span id="total-wr-value" class="value">N/A</span></div>
+                <div class="stat-item" style="grid-column: 1 / -1;"><span class="label">Sequence</span><span id="sequence-value" class="value">None</span></div>
             </div>
         </div>
 
         <div class="section">
             <div class="section-title">Probability from this Point</div>
             <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="label">Prob. of PASS</span>
-                    <span id="pass-prob-value" class="value">75.14%</span>
-                </div>
-                <div class="stat-item">
-                    <span class="label">Prob. of FAIL</span>
-                    <span id="fail-prob-value" class="value">24.86%</span>
-                </div>
+                <div class="stat-item"><span class="label">Prob. of PASS</span><span id="pass-prob-value" class="value">75.14%</span></div>
+                <div class="stat-item"><span class="label">Prob. of FAIL</span><span id="fail-prob-value" class="value">24.86%</span></div>
             </div>
         </div>
 
@@ -184,6 +177,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             let state = {};
+            let performanceChart;
             const memoizedProbs = new Map();
 
             const passTargetInput = document.getElementById('pass-target');
@@ -202,12 +196,11 @@
             const passProbEl = document.getElementById('pass-prob-value');
             const failProbEl = document.getElementById('fail-prob-value');
             const evValueEl = document.getElementById('ev-value');
+            const chartCanvas = document.getElementById('performanceChart');
 
             const calculatePassProbabilities = (winRate, winAmount, lossAmount, passTarget, failTarget) => {
                 const memoKey = `${winRate}-${winAmount}-${lossAmount}-${passTarget}-${failTarget}`;
-                if (memoizedProbs.has(memoKey)) {
-                    return memoizedProbs.get(memoKey);
-                }
+                if (memoizedProbs.has(memoKey)) return memoizedProbs.get(memoKey);
 
                 const statesToSolve = new Set();
                 const queue = [0];
@@ -247,7 +240,6 @@
                 const risk = parseFloat(riskInput.value);
                 const rr = parseFloat(rrInput.value);
                 const winRate = parseFloat(winRateInput.value) / 100;
-
                 const lossAmount = -risk;
                 const winAmount = risk * rr;
                 
@@ -256,9 +248,52 @@
                     winAmount, lossAmount, passTarget, failTarget,
                     passProbabilities: calculatePassProbabilities(winRate, winAmount, lossAmount, passTarget, failTarget)
                 };
+                
+                setupChart();
                 updateUI();
             };
             
+            const setupChart = () => {
+                if (performanceChart) {
+                    performanceChart.destroy();
+                }
+                
+                // --- VISIBILITY FIX: Set the GLOBAL default color for all chart text ---
+                // This is the most reliable way to ensure all labels are readable.
+                const primaryTextColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-text').trim();
+                Chart.defaults.color = primaryTextColor;
+                Chart.defaults.font.family = "'Roboto Mono', monospace";
+
+                const chartData = {
+                    labels: [0],
+                    datasets: [{
+                        label: 'Cumulative %', data: [0],
+                        borderColor: 'var(--chart-line-color)', 
+                        backgroundColor: 'rgba(52, 152, 219, 0.25)', 
+                        borderWidth: 2, fill: true, tension: 0.1,
+                        pointBackgroundColor: 'var(--primary-text)', pointRadius: 3,
+                    }]
+                };
+                const chartOptions = {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            ticks: { callback: (value) => value + '%' },
+                            grid: { color: 'var(--accent-color)' } 
+                        },
+                        x: {
+                            ticks: {}, // Color is now handled globally
+                            grid: { color: 'var(--accent-color)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (context) => `Cumulative: ${context.parsed.y.toFixed(2)}%` } }
+                    }
+                };
+                performanceChart = new Chart(chartCanvas, { type: 'line', data: chartData, options: chartOptions });
+            };
+
             const handleTrade = (outcome) => {
                 if (state.isStopped) return;
                 state.tradeCount++;
@@ -272,6 +307,13 @@
                 }
                 checkStatus();
                 updateUI();
+                updateChart();
+            };
+
+            const updateChart = () => {
+                performanceChart.data.labels.push(state.tradeCount);
+                performanceChart.data.datasets[0].data.push(state.cumulative);
+                performanceChart.update('none');
             };
 
             const checkStatus = () => {
@@ -306,8 +348,8 @@
                 const ev = (winRate * state.winAmount) + ((1 - winRate) * state.lossAmount);
                 evValueEl.textContent = `${ev.toFixed(2)}%`;
                 evValueEl.className = 'value';
-                if (ev > 0) evValueEl.classList.add('positive'), evValueEl.textContent = `+${ev.toFixed(2)}%`;
-                else if (ev < 0) evValueEl.classList.add('negative');
+                if (ev > 0) { evValueEl.classList.add('positive'); evValueEl.textContent = `+${ev.toFixed(2)}%`; }
+                else if (ev < 0) { evValueEl.classList.add('negative'); }
                 
                 let passProb = 0;
                 if (state.cumulative >= state.passTarget) passProb = 1.0;
