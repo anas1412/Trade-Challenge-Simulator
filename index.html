@@ -183,6 +183,95 @@
                 font-size: 1.5rem; /* Adjust header font size */
             }
         }
+
+        /* Report Generator Styles */
+        #report-container {
+            width: 800px;
+            background-color: var(--bg-color);
+            border: 2px solid var(--border-color);
+            padding: 25px;
+            font-family: 'Lato', sans-serif;
+            color: var(--primary-text);
+        }
+        .report-header {
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .report-header h1 {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 2.5rem;
+        }
+        .report-main-stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .report-stat-item .report-label {
+            font-size: 1rem;
+            color: var(--secondary-text);
+            display: block;
+        }
+        .report-stat-item .report-value {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 3rem;
+            font-weight: 700;
+        }
+        #report-status.status-pass { color: var(--win-color); }
+        #report-status.status-fail { color: var(--loss-color); }
+        .report-chart-container {
+            height: 350px;
+            margin-bottom: 20px;
+        }
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            text-align: center;
+        }
+        .report-grid-item {
+            background-color: var(--container-bg);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .report-grid-item .label {
+            display: block;
+            color: var(--secondary-text);
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+        #report-grid-item .value {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .advice-section {
+            background-color: var(--accent-color);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .advice-section .section-title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        .advice-section ul {
+            list-style-position: inside;
+            padding-left: 10px;
+        }
+        .advice-section ul li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+            font-size: 0.9rem;
+            color: var(--secondary-text);
+        }
+        .advice-section ul li b {
+            color: var(--primary-text);
+        }
+    </style>
     </style>
 </head>
 <body>
@@ -190,7 +279,7 @@
     <div class="simulator-container">
         <header>
             <h1>Trade Challenge Simulator</h1>
-            <button id="screenshot-btn" class="btn">Copy Screenshot</button>
+            <button id="screenshot-btn" class="btn">Share Report</button>
         </header>
 
         <div class="controls-column">
@@ -246,6 +335,49 @@
             <div class="chart-container">
                 <canvas id="performanceChart"></canvas>
             </div>
+
+            <div class="advice-section">
+                <div class="section-title">Prop Firm Trading Advice</div>
+                <ul>
+                    <li><b>Positive Expectancy:</b> Ensure your system's Expectancy Value (EV) is positive, ideally >1.0. An EV near zero means you will likely stay at breakeven for months, stuck in the challenge phase.</li>
+                    <li><b>Profit Factor:</b> A Profit Factor > 1 is essential. Aim for 1.5+ to show a healthy edge.</li>
+                    <li><b>Stress-Free Profitability:</b> A higher Win Rate (WR) with a lower RR is often recommended for more consistent, less stressful results.</li>
+                    <li><b>Risk Management:</b> Never risk more than 2% during a challenge and 1% when funded. This is a common rule of thumb.</li>
+                    <li><b>Discipline is Key:</b> Altering risk or RR mid-challenge can ruin your edge. Stick to your validated plan.</li>
+                    <li><b>Process Over Outcome:</b> Focus on flawless execution of your plan, not the result of a single trade.</li>
+                    <li><b>Journal & Analyze:</b> Meticulously journal your trades to analyze performance, identify patterns, and understand your psychological cycles.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden container for generating the report screenshot -->
+    <div id="report-container" style="position: absolute; left: -9999px; top: 0;">
+        <div class="report-header">
+            <h1>Trading Challenge Report</h1>
+        </div>
+        <div class="report-main-stats">
+            <div class="report-stat-item">
+                <span class="report-label">Final P&L</span>
+                <span id="report-pnl" class="report-value"></span>
+            </div>
+            <div class="report-stat-item">
+                <span class="report-label">Status</span>
+                <span id="report-status" class="report-value"></span>
+            </div>
+        </div>
+        <div class="report-chart-container">
+            <canvas id="reportChart"></canvas>
+        </div>
+        <div class="report-grid">
+            <div class="report-grid-item"><span class="label">Pass Target</span><span id="report-pass-target" class="value"></span></div>
+            <div class="report-grid-item"><span class="label">Fail Target</span><span id="report-fail-target" class="value"></span></div>
+            <div class="report-grid-item"><span class="label">Risk per Trade</span><span id="report-risk" class="value"></span></div>
+            <div class="report-grid-item"><span class="label">RR Ratio</span><span id="report-rr" class="value"></span></div>
+            <div class="report-grid-item"><span class="label">Trades Taken</span><span id="report-trades" class="value"></span></div>
+            <div class="report-grid-item"><span class="label">Win Rate</span><span id="report-winrate" class="value"></span></div>
+            <div class="report-grid-item"><span class="label">Profit Factor</span><span id="report-pf" class="value"></span></div>
+            <div class="report-grid-item"><span class="label">System Edge (EV)</span><span id="report-ev" class="value"></span></div>
         </div>
     </div>
 
@@ -253,6 +385,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             let state = {};
             let performanceChart;
+            let reportChart;
             const memoizedProbs = new Map();
 
             const passTargetInput = document.getElementById('pass-target');
@@ -274,7 +407,7 @@
             const profitFactorEl = document.getElementById('profit-factor-value');
             const chartCanvas = document.getElementById('performanceChart');
             const screenshotBtn = document.getElementById('screenshot-btn');
-            const simulatorContainer = document.querySelector('.simulator-container');
+            const reportContainer = document.getElementById('report-container');
 
             const calculatePassProbabilities = (winRate, winAmount, lossAmount, passTarget, failTarget) => {
                 const memoKey = `${winRate}-${winAmount}-${lossAmount}-${passTarget}-${failTarget}`;
@@ -336,8 +469,6 @@
                     performanceChart.destroy();
                 }
                 
-                // --- VISIBILITY FIX: Set the GLOBAL default color for all chart text ---
-                // This is the most reliable way to ensure all labels are readable.
                 const primaryTextColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-text').trim();
                 Chart.defaults.color = primaryTextColor;
                 Chart.defaults.font.family = "'Roboto Mono', monospace";
@@ -360,7 +491,7 @@
                             grid: { color: 'var(--accent-color)' } 
                         },
                         x: {
-                            ticks: {}, // Color is now handled globally
+                            ticks: {},
                             grid: { color: 'var(--accent-color)' }
                         }
                     },
@@ -454,34 +585,66 @@
                 lossBtn.disabled = state.isStopped;
             };
 
+            const generateReportAndCopyToClipboard = () => {
+                // 1. Populate Report Data
+                document.getElementById('report-pnl').textContent = cumulativeEl.textContent;
+                const statusText = statusEl.textContent;
+                const statusElReport = document.getElementById('report-status');
+                statusElReport.textContent = statusText;
+                statusElReport.className = 'report-value ' + statusEl.className.replace('status-display', '');
+
+                document.getElementById('report-pass-target').textContent = passTargetInput.value + '%';
+                document.getElementById('report-fail-target').textContent = failTargetInput.value + '%';
+                document.getElementById('report-risk').textContent = riskInput.value + '%';
+                document.getElementById('report-rr').textContent = rrInput.value;
+                document.getElementById('report-trades').textContent = tradeCountEl.textContent;
+                document.getElementById('report-winrate').textContent = totalWrEl.textContent;
+                document.getElementById('report-pf').textContent = profitFactorEl.textContent;
+                document.getElementById('report-ev').textContent = evValueEl.textContent;
+
+                // 2. Create Report Chart
+                if (reportChart) reportChart.destroy();
+                const reportChartCanvas = document.getElementById('reportChart');
+                reportChart = new Chart(reportChartCanvas, {
+                    type: 'line',
+                    data: JSON.parse(JSON.stringify(performanceChart.data)), // Deep copy data
+                    options: JSON.parse(JSON.stringify(performanceChart.options))
+                });
+
+                // 3. Generate Image and Copy
+                const originalText = screenshotBtn.textContent;
+                screenshotBtn.textContent = 'Generating...';
+                screenshotBtn.disabled = true;
+
+                reportContainer.style.display = 'block'; // Show off-screen container
+
+                html2canvas(reportContainer, { logging: false }).then(canvas => {
+                    reportContainer.style.display = 'none'; // Hide it again
+                    reportChart.destroy(); // Clean up the temporary chart
+
+                    canvas.toBlob(blob => {
+                        navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+                            .then(() => {
+                                screenshotBtn.textContent = 'Copied!';
+                                setTimeout(() => {
+                                    screenshotBtn.textContent = originalText;
+                                    screenshotBtn.disabled = false;
+                                }, 2000);
+                            })
+                            .catch(err => {
+                                console.error('Could not copy image: ', err);
+                                alert('Failed to copy screenshot.');
+                                screenshotBtn.textContent = originalText;
+                                screenshotBtn.disabled = false;
+                            });
+                    });
+                });
+            };
+
             winBtn.addEventListener('click', () => handleTrade('win'));
             lossBtn.addEventListener('click', () => handleTrade('loss'));
             resetBtn.addEventListener('click', resetSimulator);
-            
-            screenshotBtn.addEventListener('click', () => {
-                screenshotBtn.style.display = 'none';
-                html2canvas(simulatorContainer).then(canvas => {
-                    screenshotBtn.style.display = 'block';
-                    canvas.toBlob(blob => {
-                        navigator.clipboard.write([
-                            new ClipboardItem({
-                                'image/png': blob
-                            })
-                        ]).then(() => {
-                            const originalText = screenshotBtn.textContent;
-                            screenshotBtn.textContent = 'Copied!';
-                            screenshotBtn.disabled = true;
-                            setTimeout(() => {
-                                screenshotBtn.textContent = originalText;
-                                screenshotBtn.disabled = false;
-                            }, 2000);
-                        }).catch(err => {
-                            console.error('Could not copy image: ', err);
-                            alert('Failed to copy screenshot.');
-                        });
-                    });
-                });
-            });
+            screenshotBtn.addEventListener('click', generateReportAndCopyToClipboard);
 
             [passTargetInput, failTargetInput, riskInput, rrInput, winRateInput].forEach(input => {
                 input.addEventListener('change', resetSimulator);
