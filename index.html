@@ -196,6 +196,7 @@
                  <div class="section-title">System & Historical State</div>
                  <div class="stats-grid">
                     <div class="stat-item"><span class="label">System Edge (EV)</span><span id="ev-value" class="value positive">+1.00%</span></div>
+                    <div class="stat-item"><span class="label">Profit Factor</span><span id="profit-factor-value" class="value">N/A</span></div>
                     <div class="stat-item"><span class="label">Trade #</span><span id="trade-count-value" class="value">0</span></div>
                     <div class="stat-item"><span class="label">Actual WR%</span><span id="total-wr-value" class="value">N/A</span></div>
                     <div class="stat-item" style="grid-column: 1 / -1;"><span class="label">Sequence</span><span id="sequence-value" class="value">None</span></div>
@@ -251,6 +252,7 @@
             const passProbEl = document.getElementById('pass-prob-value');
             const failProbEl = document.getElementById('fail-prob-value');
             const evValueEl = document.getElementById('ev-value');
+            const profitFactorEl = document.getElementById('profit-factor-value');
             const chartCanvas = document.getElementById('performanceChart');
 
             const calculatePassProbabilities = (winRate, winAmount, lossAmount, passTarget, failTarget) => {
@@ -390,6 +392,17 @@
                 tradeCountEl.textContent = state.tradeCount;
                 sequenceEl.textContent = state.sequence.length > 0 ? state.sequence.join(' → ') : 'None';
                 totalWrEl.textContent = state.tradeCount > 0 ? `${((state.wins / state.tradeCount) * 100).toFixed(2)}%` : 'N/A';
+
+                const losses = state.tradeCount - state.wins;
+                const grossProfit = state.wins * state.winAmount;
+                const grossLoss = losses * Math.abs(state.lossAmount);
+                let profitFactor = '∞';
+                if (grossLoss > 0) {
+                    profitFactor = (grossProfit / grossLoss).toFixed(2);
+                } else if (grossProfit === 0) {
+                    profitFactor = 'N/A';
+                }
+                profitFactorEl.textContent = profitFactor;
 
                 statusEl.className = 'status-display';
                 if (state.isStopped) {
