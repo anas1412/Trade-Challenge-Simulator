@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Include html2canvas library from a CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -144,7 +145,7 @@
         #screenshot-btn {
             background-color: var(--secondary-text);
             color: var(--bg-color);
-            font-size: 0.8rem;
+            font-size: 1.2rem;
             padding: 8px 12px;
             border-bottom-width: 2px;
         }
@@ -279,7 +280,7 @@
     <div class="simulator-container">
         <header>
             <h1>Trade Challenge Simulator</h1>
-            <button id="screenshot-btn" class="btn">Share Report</button>
+            <button id="screenshot-btn" class="btn" title="Share Report"><i class="fas fa-camera"></i></button>
         </header>
 
         <div class="controls-column">
@@ -612,7 +613,7 @@
                 });
 
                 // 3. Generate Image and Copy
-                const originalText = screenshotBtn.textContent;
+                const originalHTML = screenshotBtn.innerHTML;
                 screenshotBtn.textContent = 'Generating...';
                 screenshotBtn.disabled = true;
 
@@ -625,16 +626,16 @@
                     canvas.toBlob(blob => {
                         navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
                             .then(() => {
-                                screenshotBtn.textContent = 'Copied!';
+                                screenshotBtn.innerHTML = 'Copied!';
                                 setTimeout(() => {
-                                    screenshotBtn.textContent = originalText;
+                                    screenshotBtn.innerHTML = originalHTML;
                                     screenshotBtn.disabled = false;
                                 }, 2000);
                             })
                             .catch(err => {
                                 console.error('Could not copy image: ', err);
                                 alert('Failed to copy screenshot.');
-                                screenshotBtn.textContent = originalText;
+                                screenshotBtn.innerHTML = originalHTML;
                                 screenshotBtn.disabled = false;
                             });
                     });
