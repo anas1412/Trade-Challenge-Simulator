@@ -192,23 +192,6 @@
                 </div>
             </div>
 
-            <div class="action-buttons">
-                <button id="win-btn" class="btn">Win</button>
-                <button id="loss-btn" class="btn">Loss</button>
-                <button id="reset-btn" class="btn">Reset Simulation</button>
-            </div>
-        </div>
-
-        <div class="display-column">
-            <div class="display-area">
-                <div id="cumulative-value" class="cumulative-display">0.00%</div>
-                <div id="status-value" class="status-display status-continue">START</div>
-            </div>
-            
-            <div class="chart-container">
-                <canvas id="performanceChart"></canvas>
-            </div>
-
             <div class="section">
                  <div class="section-title">System & Historical State</div>
                  <div class="stats-grid">
@@ -225,6 +208,23 @@
                     <div class="stat-item"><span class="label">Prob. of PASS</span><span id="pass-prob-value" class="value">75.14%</span></div>
                     <div class="stat-item"><span class="label">Prob. of FAIL</span><span id="fail-prob-value" class="value">24.86%</span></div>
                 </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="win-btn" class="btn">Win</button>
+                <button id="loss-btn" class="btn">Loss</button>
+                <button id="reset-btn" class="btn">Reset Simulation</button>
+            </div>
+        </div>
+
+        <div class="display-column">
+            <div class="display-area">
+                <div id="cumulative-value" class="cumulative-display">0.00%</div>
+                <div id="status-value" class="status-display status-continue">START</div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
             </div>
         </div>
     </div>
