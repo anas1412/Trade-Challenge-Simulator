@@ -18,6 +18,7 @@
             --accent-color: #0f3460;
             --win-color: #2ecc71;
             --loss-color: #e74c3c;
+            --be-color: #7f8c8d;
             --disabled-color: #536f8d;
             --border-color: #536f8d;
             --chart-line-color: #3498db;
@@ -128,7 +129,7 @@
         #ev-value.positive { color: var(--win-color); }
         #ev-value.negative { color: var(--loss-color); }
         
-        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: auto; }
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: auto; }
         .btn {
             padding: 12px; border: none; border-radius: 8px; font-size: 1rem;
             font-weight: 700; cursor: pointer; transition: all 0.2s ease;
@@ -140,6 +141,7 @@
         
         #win-btn { background-color: var(--win-color); }
         #loss-btn { background-color: var(--loss-color); }
+        #be-btn { background-color: var(--be-color); }
         #reset-btn { background-color: var(--secondary-text); color: var(--bg-color); grid-column: 1 / -1;}
         
         #screenshot-btn {
@@ -308,6 +310,7 @@
                     <div class="stat-item"><span class="label">Profit Factor</span><span id="profit-factor-value" class="value">N/A</span></div>
                     <div class="stat-item"><span class="label">Trade #</span><span id="trade-count-value" class="value">0</span></div>
                     <div class="stat-item"><span class="label">Actual WR%</span><span id="total-wr-value" class="value">N/A</span></div>
+                    
                     <div class="stat-item" style="grid-column: 1 / -1;"><span class="label">Sequence</span><span id="sequence-value" class="value">None</span></div>
                 </div>
             </div>
@@ -322,6 +325,7 @@
 
             <div class="action-buttons">
                 <button id="win-btn" class="btn">Win</button>
+                <button id="be-btn" class="btn">Breakeven</button>
                 <button id="loss-btn" class="btn">Loss</button>
                 <button id="reset-btn" class="btn">Reset Simulation</button>
             </div>
@@ -405,6 +409,7 @@
             const sequenceEl = document.getElementById('sequence-value');
             const winBtn = document.getElementById('win-btn');
             const lossBtn = document.getElementById('loss-btn');
+            const beBtn = document.getElementById('be-btn');
             const resetBtn = document.getElementById('reset-btn');
             const passProbEl = document.getElementById('pass-prob-value');
             const failProbEl = document.getElementById('fail-prob-value');
@@ -515,9 +520,11 @@
                     state.cumulative += state.winAmount;
                     state.sequence.push('W');
                     state.wins++;
-                } else {
+                } else if (outcome === 'loss') {
                     state.cumulative += state.lossAmount;
                     state.sequence.push('L');
+                } else if (outcome === 'be') {
+                    state.sequence.push('BE');
                 }
                 checkStatus();
                 updateUI();
@@ -546,6 +553,7 @@
                 cumulativeEl.textContent = `${state.cumulative.toFixed(2)}%`;
                 tradeCountEl.textContent = state.tradeCount;
                 sequenceEl.textContent = state.sequence.length > 0 ? state.sequence.join(' → ') : 'None';
+
                 totalWrEl.textContent = state.tradeCount > 0 ? `${((state.wins / state.tradeCount) * 100).toFixed(2)}%` : 'N/A';
 
                 const losses = state.tradeCount - state.wins;
@@ -596,6 +604,7 @@
                 lossBtn.textContent = `Loss (${state.lossAmount.toFixed(2)}%)`;
                 winBtn.disabled = state.isStopped;
                 lossBtn.disabled = state.isStopped;
+                beBtn.disabled = state.isStopped;
             };
 
             const generateReportAndCopyToClipboard = () => {
@@ -667,6 +676,7 @@
 
             winBtn.addEventListener('click', () => handleTrade('win'));
             lossBtn.addEventListener('click', () => handleTrade('loss'));
+            beBtn.addEventListener('click', () => handleTrade('be'));
             resetBtn.addEventListener('click', resetSimulator);
             screenshotBtn.addEventListener('click', generateReportAndCopyToClipboard);
 
